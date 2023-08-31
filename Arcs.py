@@ -1,10 +1,12 @@
 import numpy as np
+import copy
 
 generated_numbers = np.array([])
 k = 12 # количество точек на прямой (обязательно чётное)
 init = list(np.zeros(k)) # пустой список, куда будем писать последовательности
 cnt = 0 # разница между 1 и 0
 ind = 0 # индекс, по которому пишем число в список
+
 
 def f(cnt, ind, k, init):
     global generated_numbers
@@ -22,7 +24,6 @@ def f(cnt, ind, k, init):
             generated_numbers = np.append(generated_numbers, ''.join(init))
     return generated_numbers
 
-generated_numbers = f(cnt, ind, k, init) # Получили все последовательности Каталана
 
 def beautiful_number(number):
     counter = 0
@@ -38,27 +39,51 @@ def beautiful_number(number):
             summ = number[counter]
     return new_number
 
+
+def shift(lst, steps):
+    current = copy.deepcopy(lst)
+    for i in range(1, steps+1):
+        current.insert(0, current.pop())
+    return current
+
+
+katalan_numbers = f(cnt, ind, k, init)  # Получили все последовательности Каталана
 numbers = np.array([])
-for number in generated_numbers:
+output_numbers = []
+
+for number in katalan_numbers:
     number = list(map(int, str(number)))
     number = np.array([-1 if elem == 0 else elem for elem in number])
     number = beautiful_number(number)
     number = np.array([0 if elem == -1 else elem for elem in number])
     number = str(''.join(map(str, number)))
-    numbers = np.append(numbers, number)
-
-output = []
-for number in numbers:
     line = number[3:].split(' | ')
-    line.sort()
-    output.append(line)
+    line = list(map(int, line))
+    output_numbers.append(line)
 
-l = []
-for number in output: # Сортировка
-    if number not in l:
-        l.append(number)
 
-print("Всего различных расположений:", len(l))
+print("Всего различных расположений, без сортировки повторов:", len(output_numbers))
 
-for number in l:
-    print(*number)
+
+def output(array):
+    for elem in array:
+        print(*elem)
+
+# output(output_numbers)
+
+final_result = []
+check = []
+
+for elem in output_numbers:
+    current = copy.deepcopy(elem)
+    if current in check:
+        pass
+    else:
+        for i in range(len(current)):
+            check.append(shift(current, i))
+        final_result.append(current)
+
+# print(final_result)
+print("Всего принципиально различных расположений:", len(final_result))
+
+output(final_result)
