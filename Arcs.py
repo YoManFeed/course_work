@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 generated_numbers = np.array([])
-k = 12 # количество точек на прямой (обязательно чётное)
+k = 22 # количество точек на прямой (обязательно чётное)
 init = list(np.zeros(k)) # пустой список, куда будем писать последовательности
 cnt = 0 # разница между 1 и 0
 ind = 0 # индекс, по которому пишем число в список
@@ -86,4 +86,4 @@ for elem in output_numbers:
 # print(final_result)
 print("Всего принципиально различных расположений:", len(final_result))
 
-output(final_result)
+# output(final_result)
