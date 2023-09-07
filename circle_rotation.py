@@ -26,6 +26,13 @@ for external_circle_file in external_circle_files:
                 inner_circle_path = os.path.join(inner_arch_folder, inner_circle_file)
                 inner_circle = Image.open(inner_circle_path)
 
+                # Создание папки с перебором
+                inner_parts = inner_circle_file.split('.')
+                external_parts = external_circle_file.split('.')
+                if f'external_{external_parts[0]}' not in os.listdir(output_folder):
+                    os.mkdir(f'{output_folder}/external_{external_parts[0]}')
+                # extra_output_folder = os.
+
                 # Поворот и сохранение изображений
                 for step in range(rotation_steps):
                     angle = step * rotation_angle
@@ -39,10 +46,8 @@ for external_circle_file in external_circle_files:
                     result_image.paste(external_circle, (0, 0), external_circle)
 
                     # Название и сохранение
-                    inner_parts = inner_circle_file.split('.')
-                    external_parts = external_circle_file.split('.')
                     new_filename = f'circle_e{external_parts[0]}_i{inner_parts[0]}_s{step}.png'
-                    output_path = os.path.join(output_folder, new_filename)
+                    output_path = os.path.join(f'{output_folder}/external_{external_parts[0]}', new_filename)
                     result_image.save(output_path)
 
 
