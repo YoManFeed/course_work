@@ -1,6 +1,10 @@
 from PIL import Image
 import os
+import cv2
+import numpy as np
+import time
 
+start = time.time()
 print('Program started!')
 
 # Пути к директориям
@@ -17,38 +21,75 @@ rotation_steps = num_segments  # Количество поворотов для 
 inner_circle_files = os.listdir(inner_arch_folder)
 external_circle_files = os.listdir(external_arch_folder)
 
+def coloring(image):
+    start_point = (10, 10)
+    fill_color = (150, 150, 255)
+    cv2.floodFill(image, None, start_point, fill_color)
+    return image
+
+
+def Rotation(image, angle):
+    rot_mat = cv2.getRotationMatrix2D(angle=angle, scale=1., center=(256, 256))
+    rotated_circle = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR, borderMode=1)
+    return rotated_circle
+
+
+def combining(inner, external, rotation_steps):
+    # rotation
+    for step in range(rotation_steps):
+        angle = step * rotation_angle
+        rotated_inner = Rotation(image=inner, angle=angle)
+
+        #combining
+        combination = cv2.addWeighted(external, 0.5, rotated_inner, 0.5, 0)
+        gray = cv2.cvtColor(combination, cv2.COLOR_BGR2HSV)[:, :, 2]
+        T = cv2.ximgproc.niBlackThreshold(gray, maxValue=255, type=cv2.THRESH_BINARY_INV, blockSize=81,
+                                          k=0.1, binarizationMethod=cv2.ximgproc.BINARIZATION_WOLF)
+        grayb = (gray > T).astype("uint8") * 255
+
+        # smoothing
+        kernel = np.ones((5, 5), np.float32) / 12
+        dst = cv2.filter2D(grayb, -1, kernel)
+
+        # saving
+        new_filename = f'circle_e{external_parts[0]}_i{inner_parts[0]}_s{step}.png'
+        output_path = os.path.join(f'{output_folder}/external_{external_parts[0]}', new_filename)
+        data = Image.fromarray(dst)
+        data.save(output_path)
+
+        # coloring
+        output_path_colored = os.path.join(f'{output_folder}_colored/external_{external_parts[0]}', new_filename)
+        data_colored = Image.fromarray(coloring(image=dst))
+        data_colored.save(output_path_colored)
+
+
 for external_circle_file in external_circle_files:
     if external_circle_file.lower().endswith(('.png', '.jpg', '.jpeg')):
         external_circle_path = os.path.join(external_arch_folder, external_circle_file)
-        external_circle = Image.open(external_circle_path)
+        external_circle = cv2.imread(external_circle_path)
+
         for inner_circle_file in inner_circle_files:
             if inner_circle_file.lower().endswith(('.png', '.jpg', '.jpeg')):
                 inner_circle_path = os.path.join(inner_arch_folder, inner_circle_file)
-                inner_circle = Image.open(inner_circle_path)
+                inner_circle = cv2.imread(inner_circle_path)
 
                 # Создание папки с перебором
                 inner_parts = inner_circle_file.split('.')
                 external_parts = external_circle_file.split('.')
                 if f'external_{external_parts[0]}' not in os.listdir(output_folder):
                     os.mkdir(f'{output_folder}/external_{external_parts[0]}')
-                # extra_output_folder = os.
+                if f'external_{external_parts[0]}' not in os.listdir(f'{output_folder}_colored'):
+                    os.mkdir(f'{output_folder}_colored/external_{external_parts[0]}')
 
                 # Поворот и сохранение изображений
-                for step in range(rotation_steps):
-                    angle = step * rotation_angle
-                    rotated_circle = inner_circle.rotate(angle, expand=False, resample=Image.BICUBIC)
+                combining(inner_circle, external_circle, rotation_steps)
 
-                    # Наложение внешних дуг на внутренние
-                    result_image = Image.new('RGBA', rotated_circle.size)
-                    result_image.paste(rotated_circle, (0, 0))
-
-                    # Наложение внешних дуг на внутренние с учетом альфа-канала
-                    result_image.paste(external_circle, (0, 0), external_circle)
-
-                    # Название и сохранение
-                    new_filename = f'circle_e{external_parts[0]}_i{inner_parts[0]}_s{step}.png'
-                    output_path = os.path.join(f'{output_folder}/external_{external_parts[0]}', new_filename)
-                    result_image.save(output_path)
+"""Доделать"""
+# почистить те, которые не удовлетворяют, потом прогой оставить пересечения по названиям
 
 
 print('Done!')
+end = time.time()
+print('Program processed', end-start, 'seconds') # 636 секунд c Pillow без заливки
+                                                 # 281 секунд с openCV + заливка
+                                                 # 108 секунд c openCV без заливки
