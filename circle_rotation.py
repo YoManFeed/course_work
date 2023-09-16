@@ -21,8 +21,29 @@ rotation_steps = num_segments  # Количество поворотов для 
 inner_circle_files = os.listdir(inner_arch_folder)
 external_circle_files = os.listdir(external_arch_folder)
 
+
+"""DO NOT TOUCH, SOMEHOW IT WORKS. REGULAR cv2.imread() HAS GLITCHES"""
+def read_transparent_png(img_path):
+    image_4channel = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+    alpha_channel = image_4channel[:,:,3]
+    rgb_channels = image_4channel[:,:,:3]
+
+    # White Background Image
+    white_background_image = np.ones_like(rgb_channels, dtype=np.uint8) * 255
+
+    # Alpha factor
+    alpha_factor = alpha_channel[:,:,np.newaxis].astype(np.float32) / 255.0
+    alpha_factor = np.concatenate((alpha_factor,alpha_factor,alpha_factor), axis=2)
+
+    # Transparent Image Rendered on White Background
+    base = rgb_channels.astype(np.float32) * alpha_factor
+    white = white_background_image.astype(np.float32) * (1 - alpha_factor)
+    final_image = base + white
+    return final_image.astype(np.uint8)
+
+
 def coloring(image):
-    start_point = (10, 10)
+    start_point = (510, 510)
     fill_color = (150, 150, 255)
     cv2.floodFill(image, None, start_point, fill_color)
     return image
@@ -46,10 +67,11 @@ def combining(inner, external, rotation_steps):
         T = cv2.ximgproc.niBlackThreshold(gray, maxValue=255, type=cv2.THRESH_BINARY_INV, blockSize=81,
                                           k=0.1, binarizationMethod=cv2.ximgproc.BINARIZATION_WOLF)
         grayb = (gray > T).astype("uint8") * 255
+        dst = grayb
 
         # smoothing
-        kernel = np.ones((5, 5), np.float32) / 12
-        dst = cv2.filter2D(grayb, -1, kernel)
+        # kernel = np.ones((5, 5), np.float32) / 12
+        # dst = cv2.filter2D(grayb, -1, kernel)
 
         # saving
         new_filename = f'circle_e{external_parts[0]}_i{inner_parts[0]}_s{step}.png'
@@ -66,12 +88,14 @@ def combining(inner, external, rotation_steps):
 for external_circle_file in external_circle_files:
     if external_circle_file.lower().endswith(('.png', '.jpg', '.jpeg')):
         external_circle_path = os.path.join(external_arch_folder, external_circle_file)
-        external_circle = cv2.imread(external_circle_path)
+        # external_circle = cv2.imread(external_circle_path)
+        external_circle = read_transparent_png(external_circle_path)
 
         for inner_circle_file in inner_circle_files:
             if inner_circle_file.lower().endswith(('.png', '.jpg', '.jpeg')):
                 inner_circle_path = os.path.join(inner_arch_folder, inner_circle_file)
-                inner_circle = cv2.imread(inner_circle_path)
+                # inner_circle = cv2.imread(inner_circle_path)
+                inner_circle = read_transparent_png(inner_circle_path)
 
                 # Создание папки с перебором
                 inner_parts = inner_circle_file.split('.')
@@ -91,5 +115,6 @@ for external_circle_file in external_circle_files:
 print('Done!')
 end = time.time()
 print('Program processed', end-start, 'seconds') # 636 секунд c Pillow без заливки
-                                                 # 281 секунд с openCV + заливка
+                                                 # 281 секунд с openCV + заливка + smoothing
                                                  # 108 секунд c openCV без заливки
+                                                 # 261 секунд с openCV + заливка с пофикшенным альфа-каналом
