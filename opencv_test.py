@@ -6,20 +6,21 @@ import cv2
 
 def read_transparent_png(img_path):
     image_4channel = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
-    alpha_channel = image_4channel[:,:,3]
-    rgb_channels = image_4channel[:,:,:3]
+    alpha_channel = image_4channel[:, :, 3]
+    rgb_channels = image_4channel[:, :, :3]
 
     # White Background Image
     white_background_image = np.ones_like(rgb_channels, dtype=np.uint8) * 255
 
     # Alpha factor
-    alpha_factor = alpha_channel[:,:,np.newaxis].astype(np.float32) / 255.0
-    alpha_factor = np.concatenate((alpha_factor,alpha_factor, alpha_factor), axis=2)
+    alpha_factor = alpha_channel[:, :, np.newaxis].astype(np.float32) / 255.0
+    alpha_factor = np.concatenate((alpha_factor, alpha_factor, alpha_factor), axis=2)
 
     # Transparent Image Rendered on White Background
     base = rgb_channels.astype(np.float32) * alpha_factor
     white = white_background_image.astype(np.float32) * (1 - alpha_factor)
     final_image = base + white
+
     return final_image.astype(np.uint8)
 
 
@@ -50,7 +51,7 @@ def show_me(image):
         cv2.destroyAllWindows()
     except:
         pass
-# show_me(circle)
+
 
 def Rotation(image, angle):
     rot_mat = cv2.getRotationMatrix2D(angle=angle, scale=1., center=(256, 256))
@@ -94,7 +95,7 @@ def combining(inner, external):
     external_alpha = external[:, :, 3]
     alpha_channel = inner_alpha | external_alpha
 
-    combination = cv2.addWeighted(external, 1, inner, 1, 1)
+    combination = cv2.addWeighted(external, 0.5, inner, 0.5, 1)
     # print(combination.shape)
     # alpha_channel = combination[:, :, 3]
     # print('alpha_channel shape', alpha_channel.shape)
