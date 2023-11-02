@@ -23,8 +23,9 @@ image_path_transparent = os.path.join(current_dir, 'transparent.png')
 output_folder = os.path.join(current_dir, 'output')
 
 catalan_path = os.path.join(current_dir, 'catalan_codes.txt')
-ex_path = os.path.join(current_dir, 'external_codes.txt')
+# ex_path = os.path.join(current_dir, 'external_codes.txt')
 in_path = os.path.join(current_dir, 'inner_codes.txt')
+ex_path = in_path
 correct_sequence = []
 
 # depends on what type of arches I want
