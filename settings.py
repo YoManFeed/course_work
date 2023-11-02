@@ -4,6 +4,7 @@ import os
 
 # Глобальные параметры
 arches = 12
+border = 3
 
 # Для каталана
 generated_numbers = np.array([])
