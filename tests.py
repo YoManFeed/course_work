@@ -23,59 +23,80 @@ if __name__ == '__main__':
     result = list(map(catal_into_arch_indx, catalan_codes))
     result = list(map(making_arches, result))
     result = [item for item in result if item is not None]
-    result = list(map(block, result))
+    ic(result, len(result))
+    # result = list(map(block, result))
     result = remove_repeated(result)
 
-    save_codes(result, in_path)
+    ic(result, len(result))
 
-    inner_arches = read_arches(quantity=inner_quantity, circle=False)
-    external_arches = read_arches(quantity=external_quantity, circle=False)
+    result = list(map(make_negatives, result))
+    ic(result)
 
-    ex_counter = 0
-    inn_counter = 0
-    counter = 0
 
-    with open(ex_path) as external_file:
-        for external_line in external_file:
-            ex_counter += 1
-            counter += 1
-            external_line = external_line.replace(' ', '').strip()
-            external_line = list(map(int, external_line))
+    true_counter = 0
+    for i, code1 in enumerate(result):
+        for j, code2 in enumerate(result):
+            for step in range(len(code1)):
+                if cyclic_check(code1, shift(code2, step)):
+                    true_counter += 1
+                    ic(code1)
+                    ic(shift(code2, step))
+                    ic(f'{i+1}, {j+1}, {step}')
+    ic(true_counter)
 
-            with open('parameters.json', 'r') as params_file:
-                parameters = json.load(params_file)
+# TODO Все работает, остается только научиться генерировать 46 внешних дуг, потому что у меня неправильно
+# TODO и потом надо их сохранить и генерировать + рисовать, но это просто
 
-            if ex_counter > parameters.get('ex_counter', 0):
-                with open(in_path) as inner_file:
-                    for inner_line in inner_file:
-
-                        # надо через мап присвоить значения интов
-                        inner_line = inner_line.replace(' ', '').strip()
-                        inner_line = list(map(int, inner_line))
-                        ic(external_line)
-                        inn_counter += 1
-
-                        if f'external_{ex_counter}' not in os.listdir(output_folder):
-                            os.mkdir(f'{output_folder}/external_{ex_counter}')
-                        if f'external_{ex_counter}' not in os.listdir(f'{output_folder}_colored'):
-                            os.mkdir(f'{output_folder}_colored/external_{ex_counter}')
-
-                        inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
-                        external_circle = gather_arches(code=external_line, arches_type=external_arches)
-
-                        combining(inner_circle, external_circle, rotation_steps, inn_counter, ex_counter)
-                    inn_counter = 0
-
-                if counter % 100 == 0:
-                    print('wanna continue to generate? yes/no')
-                    if stop() == True:
-                        parameters = {
-                            'ex_counter': ex_counter,
-                            'inn_counter': inn_counter,
-                            'counter': counter
-                        }
-                        with open(json_path, 'w') as params_file:
-                            json.dump(parameters, params_file)
-                        break
-                    else:
-                        continue
+    # save_codes(result, in_path)
+    #
+    # inner_arches = read_arches(quantity=inner_quantity, circle=False)
+    # external_arches = read_arches(quantity=external_quantity, circle=False)
+    #
+    # ex_counter = 0
+    # inn_counter = 0
+    # counter = 0
+    #
+    # with open(ex_path) as external_file:
+    #     for external_line in external_file:
+    #         ex_counter += 1
+    #         counter += 1
+    #         external_line = external_line.replace(' ', '').strip()
+    #         external_line = list(map(int, external_line))
+    #
+    #         with open('parameters.json', 'r') as params_file:
+    #             parameters = json.load(params_file)
+    #
+    #         if ex_counter > parameters.get('ex_counter', 0):
+    #             with open(in_path) as inner_file:
+    #                 for inner_line in inner_file:
+    #
+    #                     # надо через мап присвоить значения интов
+    #                     inner_line = inner_line.replace(' ', '').strip()
+    #                     inner_line = list(map(int, inner_line))
+    #                     ic(external_line)
+    #                     inn_counter += 1
+    #
+    #                     if f'external_{ex_counter}' not in os.listdir(output_folder):
+    #                         os.mkdir(f'{output_folder}/external_{ex_counter}')
+    #                     if f'external_{ex_counter}' not in os.listdir(f'{output_folder}_colored'):
+    #                         os.mkdir(f'{output_folder}_colored/external_{ex_counter}')
+    #
+    #                     inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
+    #                     external_circle = gather_arches(code=external_line, arches_type=external_arches)
+    #
+    #                     combining(inner_circle, external_circle, rotation_steps, inn_counter, ex_counter)
+    #                 inn_counter = 0
+    #
+    #             if counter % 100 == 0:
+    #                 print('wanna continue to generate? yes/no')
+    #                 if stop() == True:
+    #                     parameters = {
+    #                         'ex_counter': ex_counter,
+    #                         'inn_counter': inn_counter,
+    #                         'counter': counter
+    #                     }
+    #                     with open(json_path, 'w') as params_file:
+    #                         json.dump(parameters, params_file)
+    #                     break
+    #                 else:
+    #                     continue
