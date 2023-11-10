@@ -22,27 +22,28 @@ if __name__ == '__main__':
 
     result = list(map(catal_into_arch_indx, catalan_codes))
     result = list(map(making_arches, result))
-    result = [item for item in result if item is not None]
-    ic(result, len(result))
-    # result = list(map(block, result))
-    result = remove_repeated(result)
-
-    ic(result, len(result))
-
-    result = list(map(make_negatives, result))
-    ic(result)
-
-
-    true_counter = 0
-    for i, code1 in enumerate(result):
-        for j, code2 in enumerate(result):
-            for step in range(len(code1)):
-                if cyclic_check(code1, shift(code2, step)):
-                    true_counter += 1
-                    ic(code1)
-                    ic(shift(code2, step))
-                    ic(f'{i+1}, {j+1}, {step}')
-    ic(true_counter)
+    ic(len(result))
+    # result = [item for item in result if item is not None]
+    # ic(result, len(result))
+    # # result = list(map(block, result))
+    # result = remove_repeated(result)
+    #
+    # ic(result, len(result))
+    #
+    # result = list(map(make_negatives, result))
+    # ic(result)
+    #
+    #
+    # true_counter = 0
+    # for i, code1 in enumerate(result):
+    #     for j, code2 in enumerate(result):
+    #         for step in range(len(code1)):
+    #             if cyclic_check(code1, shift(code2, step)):
+    #                 true_counter += 1
+    #                 ic(code1)
+    #                 ic(shift(code2, step))
+    #                 ic(f'{i+1}, {j+1}, {step}')
+    # ic(true_counter)
 
 # TODO Все работает, остается только научиться генерировать 46 внешних дуг, потому что у меня неправильно
 # TODO и потом надо их сохранить и генерировать + рисовать, но это просто

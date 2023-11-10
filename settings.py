@@ -4,7 +4,9 @@ import os
 
 # Глобальные параметры
 arches = 12
-border = 3
+border = 3  # какие дуги запрещены для внутренних кодировок
+
+generate_again = True  # Надо ли ещё раз генерировать
 
 # Для каталана
 generated_numbers = np.array([])
@@ -23,9 +25,9 @@ image_path_transparent = os.path.join(current_dir, 'transparent.png')
 output_folder = os.path.join(current_dir, 'output')
 
 catalan_path = os.path.join(current_dir, 'catalan_codes.txt')
-# ex_path = os.path.join(current_dir, 'external_codes.txt')
+ex_path = os.path.join(current_dir, 'external_codes.txt')
 in_path = os.path.join(current_dir, 'inner_codes.txt')
-ex_path = in_path
+# ex_path = in_path
 correct_sequence = []
 
 # depends on what type of arches I want
