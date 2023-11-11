@@ -35,7 +35,8 @@ def catal_into_arch_indx(number: str) -> list[tuple]:
 def external_checker(code: list[int]) -> bool:
     counter = 0
     for digit in code:
-        # TODO выянсть на что заменить 3 в общем случае
+        # TODO выяснить на что заменить 3 в общем случае
+        # TODO вообще надо написать функцию глубины, которая запоминает самую длинную убывающую последовательность
         if digit != 0:
             counter += 1
             if counter > 3:
@@ -182,23 +183,40 @@ def cyclic_check(code1: list[int], code2: list[int]) -> bool:
 
 
 if __name__ == '__main__':
-    catalan_codes = catalan(cnt, ind, arches, init)
-    pair_indexes = list(map(catal_into_arch_indx, catalan_codes))
-    inner, external = making_arches(pair_indexes)
+    # catalan_codes = catalan(cnt, ind, arches, init)
+    # pair_indexes = list(map(catal_into_arch_indx, catalan_codes))
+    # inner, external = making_arches(pair_indexes)
+    #
+    # external = list(map(block, external))
+    # inner = list(map(block, inner))
+    #
+    #
+    # inner = remove_repeated(inner)
+    # external = remove_repeated(external)
+    # # ic(type(inner[0][0]))
+    # # inner = list(map(make_negatives, inner))
+    #
+    # ic(inner)
+    # ic(external)
+    #
+    # ic(len(inner))
+    # ic(len(external))
 
-    external = list(map(block, external))
-    inner = list(map(block, inner))
-
-    ic(inner)
-
-    inner = remove_repeated(inner)
-    external = remove_repeated(external)
-    # ic(type(inner[0][0]))
-    # inner = list(map(make_negatives, inner))
-    ic(len(inner))
-    ic(len(external))
+    # sequence = [6, 5, 1, 0, 3, 1, 0, 1, 0, 0, 0, 0]
+    # max_number = max(sequence)
+    # min_number = max_number + 1
+    # sub_seq_len = 0
+    # for i, number in enumerate(sequence[sequence.index(max_number):-1]):
+    #     if number != 0:
+    #         if number <= max_number:
+    #             sub_seq_len += 1
+    #             if number <
+    #     else:
+    #         pass
 
     pass
 
 # [3, 2, 1, -1, -2, -3, 3, 2, 1, -1, -2, -3]
 # [1, -1, -2, -3, 3, 2, 1, -1, -2, -3, 3, 2]
+
+
