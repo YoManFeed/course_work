@@ -85,7 +85,7 @@ def block(code: list[str]) -> list[str]:
 
 def shift(lst: list[str], step: int) -> list[str]:
     current = copy.deepcopy(lst)
-    return current[step:] + current[:step]
+    return current[-step:] + current[:-step]
 
 
 def remove_repeated(codes: list[list[str]]) -> list[list[str]]:
@@ -158,24 +158,15 @@ def ar_mod(number: int, base: int):
 
 def cyclic_check(code1: list[int], code2: list[int]) -> bool:
     i = 0
-    # elem1 = code1[i]
-    # elem2 = code2[i]
     base = len(code1)
     for counter in range(base):
         elem1 = code1[i]
         elem2 = code2[i]
-        # print(code1)
-        # print(code2)
-        # print([i for i in range(12)])
-        # print(f'bottom: index {i} elem1 {elem1}, elem2 {elem2}')
         i = i + 2 * elem2 - sign(elem2)
-        # print(f'bottom index {i} changed to {ar_mod(i, base=base)}')
         i = ar_mod(i, base=base)
         elem2 = code2[i]
         elem1 = code1[i]
-        # print(f'upper: index {i} elem1 {elem1}, elem2 {elem2}')
         i = i + 2 * elem1 - sign(elem1)
-        # print(f'upper index {i} changed to {ar_mod(i, base=base)}')
         i = ar_mod(i, base=base)
         if i == 0 and counter < -1 + base // 2:
             return False
@@ -183,40 +174,4 @@ def cyclic_check(code1: list[int], code2: list[int]) -> bool:
 
 
 if __name__ == '__main__':
-    # catalan_codes = catalan(cnt, ind, arches, init)
-    # pair_indexes = list(map(catal_into_arch_indx, catalan_codes))
-    # inner, external = making_arches(pair_indexes)
-    #
-    # external = list(map(block, external))
-    # inner = list(map(block, inner))
-    #
-    #
-    # inner = remove_repeated(inner)
-    # external = remove_repeated(external)
-    # # ic(type(inner[0][0]))
-    # # inner = list(map(make_negatives, inner))
-    #
-    # ic(inner)
-    # ic(external)
-    #
-    # ic(len(inner))
-    # ic(len(external))
-
-    # sequence = [6, 5, 1, 0, 3, 1, 0, 1, 0, 0, 0, 0]
-    # max_number = max(sequence)
-    # min_number = max_number + 1
-    # sub_seq_len = 0
-    # for i, number in enumerate(sequence[sequence.index(max_number):-1]):
-    #     if number != 0:
-    #         if number <= max_number:
-    #             sub_seq_len += 1
-    #             if number <
-    #     else:
-    #         pass
-
     pass
-
-# [3, 2, 1, -1, -2, -3, 3, 2, 1, -1, -2, -3]
-# [1, -1, -2, -3, 3, 2, 1, -1, -2, -3, 3, 2]
-
-

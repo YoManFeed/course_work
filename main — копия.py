@@ -1,5 +1,5 @@
 from generating_archs import *
-from working_with_images import read_arches, gather_arches, combining
+from working_with_images import read_arches, gather_arches, combining, rotation
 import json
 from icecream import ic
 
@@ -67,10 +67,17 @@ if __name__ == '__main__':
                         if f'external_{ex_counter}' not in os.listdir(f'{output_folder}_colored'):
                             os.mkdir(f'{output_folder}_colored/external_{ex_counter}')
 
-                        inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
-                        external_circle = gather_arches(code=external_line, arches_type=external_arches)
+                        inner_line_neg = make_negatives(inner_line)
+                        external_line_neg = make_negatives(external_line)
 
-                        combining(inner_circle, external_circle, rotation_steps, inn_counter, ex_counter)
+                        for step in range(rotation_steps):
+                            shifted_inner_code = shift(inner_line_neg, step)
+
+                            if cyclic_check(external_line_neg, shifted_inner_code):
+                                shifted_inner_code = shift(inner_line, step)
+                                inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
+                                external_circle = gather_arches(code=external_line, arches_type=external_arches)
+                                combining(inner_circle, external_circle, step, inn_counter, ex_counter)
                     inn_counter = 0
 
                 if counter % 100 == 0:
@@ -86,3 +93,4 @@ if __name__ == '__main__':
                         break
                     else:
                         continue
+g

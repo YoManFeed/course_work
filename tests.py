@@ -16,88 +16,73 @@ def stop():
         stop()
 
 
+def check_depth(nums: list, counter, flag) -> list or int or bool:
+    global counter_
+    # counter_ = counter
+    index2 = nums[0] * 2 - 1
+    # counter_ += 1
+
+    # ic(counter_)
+
+    ic(nums, flag)
+
+    if nums == [1, 0] and flag == 'cut':
+        counter_ += 1
+
+    if index2 > 2:
+        # ic(nums[index1 + 1:index2])
+        counter_ += 1
+        check_depth(nums[1:index2], counter_, flag='cut')
+
+    if index2 + 1 != len(nums):
+        # ic(nums[index2+1:])
+        counter_ = min(counter_, counter_+1)
+        check_depth(nums[index2+1:], counter_-1, flag='other block')
+
+    return counter_
+
+# TODO FIXME доделть эту функцию, чтобы из 80 вариантов отобрать нужные 46
+# def check_depth(nums: list, counter, counters) -> list or int or bool:
+#     counter += 1
+#     index1 = 0
+#     index2 = nums[0] * 2 - 1
+#
+#     # ic(counter_)
+#
+#     if index2 - index1 > 1:
+#         # ic(nums[index1 + 1:index2])
+#         counters.append(counter)
+#         check_depth(nums[index1+1:index2], counter, counters)
+#
+#     # if len(nums) == 2:
+#     #     counters.append(counter)
+#
+#     if index2 + 1 != len(nums):
+#         # ic(nums[index2+1:])
+#         counters.append(counter)
+#         check_depth(nums[index2+1:], counter-1, counters)
+#
+#
+#     return counters
+
+
 if __name__ == '__main__':
+    numbers = [6, 3, 1, 0, 1, 0, 0, 2, 1, 0, 0, 0]
+    numbers = list(map(int, '321000321000'))
+    numbers = list(map(int, '310100321000'))
 
-    catalan_codes = catalan(cnt, ind, arches, init)
+    # with open(ex_path) as file:
+    #     for external_line in file:
+    #         external_line = external_line.replace(' ', '').strip()
+    #         external_line = list(map(int, external_line))
+    #         # result = check_depth(external_line, counter=0, counters=[])
+    #         counter_=0
+    #         result = check_depth(external_line, counter=0)
+    #         print("Глубина рекурсии:", result, external_line)
 
-    result = list(map(catal_into_arch_indx, catalan_codes))
-    result = list(map(making_arches, result))
-    ic(len(result))
-    # result = [item for item in result if item is not None]
-    # ic(result, len(result))
-    # # result = list(map(block, result))
-    # result = remove_repeated(result)
-    #
-    # ic(result, len(result))
-    #
-    # result = list(map(make_negatives, result))
-    # ic(result)
-    #
-    #
-    # true_counter = 0
-    # for i, code1 in enumerate(result):
-    #     for j, code2 in enumerate(result):
-    #         for step in range(len(code1)):
-    #             if cyclic_check(code1, shift(code2, step)):
-    #                 true_counter += 1
-    #                 ic(code1)
-    #                 ic(shift(code2, step))
-    #                 ic(f'{i+1}, {j+1}, {step}')
-    # ic(true_counter)
+    counter_ = 0
+    result = check_depth(numbers, counter=0, flag='other block')
+    print("Глубина рекурсии:", result, numbers)
 
 # TODO Все работает, остается только научиться генерировать 46 внешних дуг, потому что у меня неправильно
 # TODO и потом надо их сохранить и генерировать + рисовать, но это просто
-
-    # save_codes(result, in_path)
-    #
-    # inner_arches = read_arches(quantity=inner_quantity, circle=False)
-    # external_arches = read_arches(quantity=external_quantity, circle=False)
-    #
-    # ex_counter = 0
-    # inn_counter = 0
-    # counter = 0
-    #
-    # with open(ex_path) as external_file:
-    #     for external_line in external_file:
-    #         ex_counter += 1
-    #         counter += 1
-    #         external_line = external_line.replace(' ', '').strip()
-    #         external_line = list(map(int, external_line))
-    #
-    #         with open('parameters.json', 'r') as params_file:
-    #             parameters = json.load(params_file)
-    #
-    #         if ex_counter > parameters.get('ex_counter', 0):
-    #             with open(in_path) as inner_file:
-    #                 for inner_line in inner_file:
-    #
-    #                     # надо через мап присвоить значения интов
-    #                     inner_line = inner_line.replace(' ', '').strip()
-    #                     inner_line = list(map(int, inner_line))
-    #                     ic(external_line)
-    #                     inn_counter += 1
-    #
-    #                     if f'external_{ex_counter}' not in os.listdir(output_folder):
-    #                         os.mkdir(f'{output_folder}/external_{ex_counter}')
-    #                     if f'external_{ex_counter}' not in os.listdir(f'{output_folder}_colored'):
-    #                         os.mkdir(f'{output_folder}_colored/external_{ex_counter}')
-    #
-    #                     inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
-    #                     external_circle = gather_arches(code=external_line, arches_type=external_arches)
-    #
-    #                     combining(inner_circle, external_circle, rotation_steps, inn_counter, ex_counter)
-    #                 inn_counter = 0
-    #
-    #             if counter % 100 == 0:
-    #                 print('wanna continue to generate? yes/no')
-    #                 if stop() == True:
-    #                     parameters = {
-    #                         'ex_counter': ex_counter,
-    #                         'inn_counter': inn_counter,
-    #                         'counter': counter
-    #                     }
-    #                     with open(json_path, 'w') as params_file:
-    #                         json.dump(parameters, params_file)
-    #                     break
-    #                 else:
-    #                     continue

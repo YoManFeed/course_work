@@ -117,34 +117,32 @@ def coloring(image):
     return image
 
 
-def combining(inner, external, rotation_steps, inn_counter, ex_counter):
-    # rotation
-    for step in range(rotation_steps):
-        angle = step * rotation_angle
-        rotated_inner = rotation(image=inner, angle=angle)
+def combining(inner, external, step, inn_counter, ex_counter):
+    angle = step * rotation_angle
+    rotated_inner = rotation(image=inner, angle=angle)
+    #combining
+    combination = cv2.addWeighted(external, 0.5, rotated_inner, 0.5, 0)
+    gray = cv2.cvtColor(combination, cv2.COLOR_BGR2HSV)[:, :, 2]
+    T = cv2.ximgproc.niBlackThreshold(gray, maxValue=255, type=cv2.THRESH_BINARY_INV, blockSize=81,
+                                      k=0.1, binarizationMethod=cv2.ximgproc.BINARIZATION_WOLF)
+    grayb = (gray > T).astype("uint8") * 255
+    dst = grayb
 
-        #combining
-        combination = cv2.addWeighted(external, 0.5, rotated_inner, 0.5, 0)
-        gray = cv2.cvtColor(combination, cv2.COLOR_BGR2HSV)[:, :, 2]
-        T = cv2.ximgproc.niBlackThreshold(gray, maxValue=255, type=cv2.THRESH_BINARY_INV, blockSize=81,
-                                          k=0.1, binarizationMethod=cv2.ximgproc.BINARIZATION_WOLF)
-        grayb = (gray > T).astype("uint8") * 255
-        dst = grayb
+    # smoothing
+    # kernel = np.ones((5, 5), np.float32) / 12
+    # dst = cv2.filter2D(grayb, -1, kernel)
 
-        # smoothing
-        # kernel = np.ones((5, 5), np.float32) / 12
-        # dst = cv2.filter2D(grayb, -1, kernel)
+    # saving
+    new_filename = f'circle_e{ex_counter}_i{inn_counter}_s{step}.png'
+    output_path = os.path.join(f'{output_folder}/external_{ex_counter}', new_filename)
+    data = Image.fromarray(dst)
+    data.save(output_path)
 
-        # saving
-        new_filename = f'circle_e{ex_counter}_i{inn_counter}_s{step}.png'
-        output_path = os.path.join(f'{output_folder}/external_{ex_counter}', new_filename)
-        data = Image.fromarray(dst)
-        data.save(output_path)
+    # coloring
+    output_path_colored = os.path.join(f'{output_folder}_colored/external_{ex_counter}', new_filename)
+    data_colored = Image.fromarray(coloring(image=dst))
+    data_colored.save(output_path_colored)
 
-        # coloring
-        output_path_colored = os.path.join(f'{output_folder}_colored/external_{ex_counter}', new_filename)
-        data_colored = Image.fromarray(coloring(image=dst))
-        data_colored.save(output_path_colored)
 
 
 if __name__ == '__main__':
