@@ -1,45 +1,24 @@
+import cv2
 from PIL import Image, ImageDraw
 import math
+from settings import *
+from working_with_images import show_me
 
 
-def draw_circle(image, x, y, radius, color="black"):
-    """
-    Рисует окружность на изображении.
-
-    Параметры:
-    - image: объект изображения (Image)
-    - x, y: координаты центра окружности
-    - radius: радиус окружности
-    - color: цвет контура окружности (по умолчанию "black")
-    """
+def draw_circle(x, y, radius, color="black"):
     draw = ImageDraw.Draw(image)
     draw.ellipse((x - radius, y - radius, x + radius, y + radius), outline=color, width=thickness)
 
 
-def draw_horizontal_line(x, y, length, angle, color="black", thickness=3):
-    """
-    Рисует горизонтальную прямую на изображении.
-
-    Параметры:
-    - image: объект изображения (Image)
-    - x, y: координаты начала прямой
-    - length: длина прямой
-    - color: цвет прямой (по умолчанию "black")
-    - thickness: толщина прямой (по умолчанию 1)
-    """
+def draw_horizontal_line(x, y, length, angle, color="red", thickness=3):
     draw = ImageDraw.Draw(image)
-
-    # Вычисляем координаты конечной точки
     x2 = x + int(length * math.cos(math.radians(angle)))
     y2 = y + int(length * math.sin(math.radians(angle)))
 
     draw.line((x, y, x2, y2), fill=color, width=thickness)
-    # draw = ImageDraw.Draw(image)
-    # draw.line((x, y, x + length, y), fill=color, width=thickness)
 
 
 def draw_small_circle_up(x_dot, y_dot, r, alpha):
-    phi = math.atan((r/(128-r)))
     x = x_dot
     y = y_dot
     start_angle = 180 + math.degrees(alpha)
@@ -50,8 +29,8 @@ def draw_small_circle_up(x_dot, y_dot, r, alpha):
         (x - r, y - r, x + r, y + r),
         start=start_angle,
         end=end_angle,
-        fill='brown',
-        width=3,
+        fill='black',
+        width=thickness,
     )
 
 
@@ -62,8 +41,9 @@ def draw_small_circle_bottom(x_dot, y_dot, r):
         start=90,
         end=180,
         fill='black',
-        width=3,
+        width=thickness,
     )
+    return draw
 
 
 def generate_circle_points(center, radius, num_points):
@@ -77,51 +57,73 @@ def generate_circle_points(center, radius, num_points):
 
 
 def connect_circles(x, y, alpha, r, R):
+    R_c = (math.sqrt(R ** 2 + (r * R / (R + r)) ** 2) + math.sqrt(r ** 2 + (r ** 2 / (R + r)) ** 2))
     phi = math.atan((r / (R + r)))
     start_angle = 180 + math.degrees(phi)
     end_angle = 180 + math.degrees(alpha) - math.degrees(phi)
     draw = ImageDraw.Draw(image)
     draw.arc(
-        (x-R, y-R, x+R, y+R),
+        (x-R_c, y-R_c, x+R_c, y+R_c),
         start=start_angle,
         end=end_angle,
-        fill='red',
-        width=3,
+        fill='black',
+        width=thickness,
     )
 
 
 if __name__ == '__main__':
     image_size = (512, 512)
-    image = Image.new("RGB", image_size, "white")
     center = (image_size[0] // 2, image_size[1] // 2)
-    radius = 128
     thickness = 3
 
-    draw_circle(image, 256, 256, 128, color='red')
-    draw_circle(image, 128, 238, 18, color='blue')
-    draw_horizontal_line(256, 256, 512, -150)
-    draw_horizontal_line(256, 256, 512, -180)
+    deg = 6
+    num_points = 2 * deg
+    R = image_size[0] // 4
+    D = 2*R
+    r = R // (deg+2)
 
-    for i in range(6):
-        small_radius = 18+18*i
-        draw_small_circle_bottom(128, 256, small_radius)
+    # image = Image.new("RGB", image_size, "white")
+    # draw = ImageDraw.Draw(image)
 
-    num_points = 12  # Измените на желаемое количество точек
+    points_on_circle = generate_circle_points(center, R, num_points)
+    points_on_circle = points_on_circle[num_points // 2:] + points_on_circle[:num_points // 2]
 
-    points_on_circle = generate_circle_points(center, radius, num_points)
-
-    points_on_circle = points_on_circle[len(points_on_circle) // 2:] + points_on_circle[:len(points_on_circle) // 2]
-
-    R = 128
-    r = 18
     for i, point in enumerate(points_on_circle):
         if i % 2 == 1:
-            r = 18 + 18 * (i // 2)
             angle = (i / num_points) * 2 * math.pi
-            draw_small_circle_up(point[0] - r * math.sin(angle), point[1] + r * math.cos(angle), r, alpha=angle)
-            R_connect = (math.sqrt(R**2 + (r - (r**2/(R-r)))**2)) * (1 + r/R)
-            # connect_circles(256, 256, angle, r, R_connect)
-            # connect_circles(point[0] - r * math.sin(angle), point[1] + r * math.cos(angle), angle, r, r+1)
-            connect_circles(256, 256, angle, r, R_connect)
+            r_upd = r + r * (i // 2)
 
-    image.show()
+            image = Image.new("RGB", image_size, "white")
+            draw_circle(D, D, R, color='black')
+
+            draw_small_circle_bottom(R, D, r_upd)
+            draw_small_circle_up(point[0] - r_upd * math.sin(angle), point[1] + r_upd * math.cos(angle), r_upd, alpha=angle)
+            connect_circles(D, D, angle, r_upd, R)
+
+            # file_path = os.path.join()
+            # image.save(file_path)
+
+    x1=points_on_circle[0][0]
+    y1=points_on_circle[0][1]
+
+    x2=points_on_circle[1][0]
+    y2=points_on_circle[1][1]
+
+    draw_horizontal_line(x1,y1,5,0)
+    draw_horizontal_line(x2,y2,5,0)
+
+    image_np = np.array(image)
+    image_cv2 = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+
+    center = ((x1 + x2) // 2, (y1 + y2) // 2)
+    ro = 33
+    # ro = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+    print(ro)
+    axes = (ro, int(math.sqrt(5)*ro/4))
+    angle = -75  # Угол поворота в градусах
+    color = (0, 0, 0)
+    thickness = 2
+
+    cv2.ellipse(image_cv2, center, axes, angle, 0, 180, color, thickness)
+
+    show_me(image_cv2)
