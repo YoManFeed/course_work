@@ -4,7 +4,6 @@ from PIL import Image
 from settings import *
 
 def read_transparent_png(img_path):
-    ic(img_path)
     image_4channel = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
     alpha_channel = image_4channel[:, :, 3]
     rgb_channels = image_4channel[:, :, :3]
@@ -68,11 +67,11 @@ def remove_background(image):
     return image_with_transparency
 
 
-def read_arches(quantity, circle):
-    img_paths = [''] * (quantity+1)
-    images = [0] * (quantity+1)
+def read_arches(quantity, draw_circle):
+    img_paths = np.empty(quantity + 1, dtype=object)
+    images = np.empty(quantity + 1, dtype=object)
 
-    if circle == True:
+    if draw_circle:
         img_paths[0] = image_path_circle
     else:
         img_paths[0] = image_path_transparent
@@ -84,7 +83,7 @@ def read_arches(quantity, circle):
 
     images[0] = remove_background(read_transparent_png(img_paths[0]))
     for i in range(1, quantity + 1):
-        img_paths[i] = os.path.join(current_dir, f'{arch_type}/{arch_type}_arch_{i}.png')
+        img_paths[i] = os.path.join(current_dir, f'{arch_type}/deg_{deg}/{arch_type}_arch_{i}.png')
         images[i] = remove_background(read_transparent_png(img_paths[i]))
     return images
 
@@ -117,7 +116,7 @@ def coloring(image):
     return image
 
 
-def combining(inner, external, step, inn_counter, ex_counter):
+def combining(inner, external, step, inn_counter, ex_counter, external_line, inner_line):
     angle = step * rotation_angle
     rotated_inner = rotation(image=inner, angle=angle)
     #combining
@@ -129,22 +128,37 @@ def combining(inner, external, step, inn_counter, ex_counter):
     dst = grayb
 
     # smoothing
-    # kernel = np.ones((5, 5), np.float32) / 12
-    # dst = cv2.filter2D(grayb, -1, kernel)
+    dst = cv2.GaussianBlur(dst, (3, 3), 0)
+
+    # labeling
+    if bool_labeling:
+        upper_text = ''.join([str(num) if num < 0 else f' {num}' for num in external_line])
+        bottom_text = ''.join([str(num) if num < 0 else f' {num}' for num in inner_line])
+        font = cv2.FONT_HERSHEY_DUPLEX
+        font_scale = 0.8
+        font_color = (120, 0, 120)
+        thickness = 1
+
+        # Координаты начальной точки для текста
+        org_1 = (25, 25)
+        org_2 = (25, 50)
+        cv2.putText(dst, upper_text, org_1, font, font_scale, font_color, thickness)
+        cv2.putText(dst, bottom_text, org_2, font, font_scale, font_color, thickness)
 
     # saving
-    new_filename = f'circle_e{ex_counter}_i{inn_counter}_s{step}.png'
-    output_path = os.path.join(f'{output_folder}/external_{ex_counter}', new_filename)
-    data = Image.fromarray(dst)
-    data.save(output_path)
+    if bool_save_pics:
+        new_filename = f'circle_e{ex_counter}_i{inn_counter}_s{step}.png'
+        output_path = os.path.join(f'{output_folder}/external_{ex_counter}', new_filename)
+        data = Image.fromarray(dst)
+        data.save(output_path)
 
     # coloring
-    output_path_colored = os.path.join(f'{output_folder}_colored/external_{ex_counter}', new_filename)
-    data_colored = Image.fromarray(coloring(image=dst))
-    data_colored.save(output_path_colored)
+    if bool_color_bgrd:
+        output_path_colored = os.path.join(f'{output_folder}_colored/external_{ex_counter}', new_filename)
+        data_colored = Image.fromarray(coloring(image=dst))
+        data_colored.save(output_path_colored)
 
 
 
 if __name__ == '__main__':
-    read_arches(quantity=inner_quantity, circle=True)
     pass
