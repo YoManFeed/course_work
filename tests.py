@@ -1,88 +1,162 @@
 from generating_archs import *
-from working_with_images import read_arches, gather_arches, combining
+from working_with_images import *
 import json
 from settings import *
 from icecream import ic
+import time
+import cv2
+import pandas as pd
 
 
-def stop():
-    ans = input()
-    if ans == 'yes':
-        return False
-    elif ans == 'no':
-        return True
-    else:
-        print('incorrect command')
-        stop()
+def combining(inner, external, step, inn_counter, ex_counter, external_line, inner_line):
+    # angle = step * rotation_angle
+    angle = step * 0
+    rotated_inner = rotation(image=inner, angle=angle)
+    # combining
+    combination = cv2.addWeighted(external, 0.5, rotated_inner, 0.5, 0)
+    gray = cv2.cvtColor(combination, cv2.COLOR_BGR2HSV)[:, :, 2]
+    T = cv2.ximgproc.niBlackThreshold(gray, maxValue=255, type=cv2.THRESH_BINARY_INV, blockSize=81,
+                                      k=0.1, binarizationMethod=cv2.ximgproc.BINARIZATION_WOLF)
+    grayb = (gray > T).astype("uint8") * 255
+    dst = grayb
+
+    # smoothing
+    dst = cv2.GaussianBlur(dst, (3, 3), 0)
+
+    # labeling
+    if bool_labeling:
+        upper_text = ''.join([str(num) if num < 0 else f' {num}' for num in external_line])
+        bottom_text = ''.join([str(num) if num < 0 else f' {num}' for num in inner_line])
+        font = cv2.FONT_HERSHEY_DUPLEX
+        font_scale = 0.8
+        font_color = (120, 0, 120)
+        thickness = 1
+
+        # Координаты начальной точки для текста
+        org_1 = (25, 25)
+        org_2 = (25, 50)
+        cv2.putText(dst, upper_text, org_1, font, font_scale, font_color, thickness)
+        cv2.putText(dst, bottom_text, org_2, font, font_scale, font_color, thickness)
+
+    # saving
+    if bool_save_pics:
+        new_filename = f'test_output/test_e{ex_counter}_i{inn_counter}_{step}.png'
+        output_path = os.path.join(current_dir, new_filename)
+        data = Image.fromarray(dst)
+        data.save(output_path)
+
+def axes_of_symmetry(code):
+    axes = []
+    sum = 0
+    left_index = 0
+    for i, digit in enumerate(code):
+        sum += digit
+        if sum == 0:
+            axes.append((left_index + i) // 2 + 1)
+            left_index = i+1
+    return axes
 
 
-def check_depth(nums: list, counter, flag) -> list or int or bool:
-    global counter_
-    # counter_ = counter
-    index2 = nums[0] * 2 - 1
-    # counter_ += 1
+def symmetric_inner_code(code, ax):
+    code = (-1 * np.roll(code, -ax))[::-1]
+    return np.roll(code, ax).tolist()
 
-    # ic(counter_)
-
-    ic(nums, flag)
-
-    if nums == [1, 0] and flag == 'cut':
-        counter_ += 1
-
-    if index2 > 2:
-        # ic(nums[index1 + 1:index2])
-        counter_ += 1
-        check_depth(nums[1:index2], counter_, flag='cut')
-
-    if index2 + 1 != len(nums):
-        # ic(nums[index2+1:])
-        counter_ = min(counter_, counter_+1)
-        check_depth(nums[index2+1:], counter_-1, flag='other block')
-
-    return counter_
-
-# TODO FIXME доделть эту функцию, чтобы из 80 вариантов отобрать нужные 46
-# def check_depth(nums: list, counter, counters) -> list or int or bool:
-#     counter += 1
-#     index1 = 0
-#     index2 = nums[0] * 2 - 1
-#
-#     # ic(counter_)
-#
-#     if index2 - index1 > 1:
-#         # ic(nums[index1 + 1:index2])
-#         counters.append(counter)
-#         check_depth(nums[index1+1:index2], counter, counters)
-#
-#     # if len(nums) == 2:
-#     #     counters.append(counter)
-#
-#     if index2 + 1 != len(nums):
-#         # ic(nums[index2+1:])
-#         counters.append(counter)
-#         check_depth(nums[index2+1:], counter-1, counters)
-#
-#
-#     return counters
+def draw(external_line_neg, shifted_inner_code, step):
+    code_external = [max(0, x) for x in external_line_neg]
+    code_inner = [max(0, x) for x in shifted_inner_code]
+    # code_inner = [max(0, x) for x in shifted_inner_code.tolist()]
+    inner_circle = gather_arches(code=code_inner, arches_type=inner_arches)
+    external_circle = gather_arches(code=code_external, arches_type=external_arches)
+    combining(inner_circle, external_circle, step, inn_counter, ex_counter, external_line_neg,
+              shifted_inner_code)
 
 
 if __name__ == '__main__':
-    numbers = [6, 3, 1, 0, 1, 0, 0, 2, 1, 0, 0, 0]
-    numbers = list(map(int, '321000321000'))
-    numbers = list(map(int, '310100321000'))
+    closed_connections_neg = []
+    closed_connections =     []
+    result = []
+    check_ban = []
 
-    # with open(ex_path) as file:
-    #     for external_line in file:
-    #         external_line = external_line.replace(' ', '').strip()
-    #         external_line = list(map(int, external_line))
-    #         # result = check_depth(external_line, counter=0, counters=[])
-    #         counter_=0
-    #         result = check_depth(external_line, counter=0)
-    #         print("Глубина рекурсии:", result, external_line)
+    inner = read_codes(in_path)
+    external = read_codes(ex_path)
 
-    counter_ = 0
-    result = check_depth(numbers, counter=0, flag='other block')
-    print("Глубина рекурсии:", result, numbers)
+    # inner = [[2, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0]]
+    # external = [[5, 4, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0]]
 
-# TODO Все работает, остается только научиться генерировать 46 внешних дуг, потому что у меня неправильно
-# TODO и потом надо их сохранить и генерировать + рисовать, но это просто
+    inner_arches = read_arches(quantity=inner_quantity, draw_circle=bool_draw_circle)
+    external_arches = read_arches(quantity=external_quantity, draw_circle=False)
+
+    for ex_counter, external_line in enumerate(external, start=1):
+        for inn_counter, inner_line in enumerate(inner, start=1):
+            inner_line_neg = make_negatives(inner_line)
+            external_line_neg = make_negatives(external_line)
+
+            for step in range(rotation_steps):
+                shifted_inner_code = np.roll(inner_line_neg, step)
+                external_line_neg = np.roll(external_line_neg, 0)
+
+                if cyclic_check(external_line_neg, shifted_inner_code):
+                    ax = axes_of_symmetry(external_line_neg)[0]
+
+                    symmetric_check = (-1 * np.array(shifted_inner_code)[::-1]).tolist()
+                    external_check = (symmetric_inner_code(inner_line_neg, ax))
+
+                    # print(shifted_inner_code.tolist())
+                    # print(symmetric_check)
+                    # print(external_check)
+                    # print('~' * 80)
+                    if (ex_counter, shifted_inner_code.tolist()) not in result:
+                        # result.append((ex_counter, shifted_inner_code.tolist()))
+                        if (ex_counter, symmetric_check) not in result:
+                            # result.append((ex_counter, symmetric_check))
+                            if (ex_counter, external_check) not in result:
+                                result.append((ex_counter, external_check))
+
+                                # draw(external_line_neg, shifted_inner_code, step)
+                        # else:
+                        #     draw(external_line_neg, symmetric_check, step+100)
+
+    print(len(result))
+
+                    # TODO снизу написано представление |код внешних и внутренних| + |код нег внешних и нег внутренних|
+                    # closed_connections_neg.append((external_line_neg.tolist(), external_line))
+                    # closed_connections.append((shifted_inner_code.tolist(), np.roll(inner_line, 0).tolist()))
+                    # closed_connections_neg.append((external_line_neg.tolist(), shifted_inner_code.tolist()))
+                    # closed_connections.append((external_line, np.roll(inner_line, 0).tolist()))
+
+                    # code_external = [max(0, x) for x in elem[0]]
+                    # code_inner = [max(0, x) for x in elem[1]]
+                    # inner_circle = gather_arches(code=code_inner, arches_type=inner_arches)
+                    # external_circle = gather_arches(code=code_external, arches_type=external_arches)
+                    # combining(inner_circle, external_circle, step, inn_counter, ex_counter, external_line_neg,
+                    #           shifted_inner_code)
+
+    # df = pd.DataFrame(closed_connections_neg, columns=['Column1', 'Column2'])
+
+    # combined_lists = [pair for pair in zip(closed_connections_neg, closed_connections)]
+    # df = pd.DataFrame([item for sublist in combined_lists for item in sublist], columns=['Column1', 'Column2'])
+
+    # print(df)
+
+
+    # result = []
+    # check_ban = []
+
+    # for elem in closed_connections_neg:
+    #     check = (elem[0], (-1 * np.array(elem[1])[::-1]).tolist())
+    #
+    #     if elem not in result and check not in result:
+    #         result.append(elem)
+    #         print(elem)
+    #     else:
+    #         check_ban.append(elem)
+    # print(len(result))
+
+    # print(len(check_ban))
+    # for step, elem in enumerate(check_ban):
+    #     code_external = [max(0, x) for x in elem[0]]
+    #     code_inner = [max(0, x) for x in elem[1]]
+    #     inner_circle = gather_arches(code=code_inner, arches_type=inner_arches)
+    #     external_circle = gather_arches(code=code_external, arches_type=external_arches)
+    #     combining(inner_circle, external_circle, 0, step, 0, elem[0], elem[1])
+
