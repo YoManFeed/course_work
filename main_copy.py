@@ -5,6 +5,33 @@ from icecream import ic
 from tqdm import tqdm
 
 
+def axes_of_symmetry(code):
+    axes = []
+    sum = 0
+    left_index = 0
+    for i, digit in enumerate(code):
+        sum += digit
+        if sum == 0:
+            axes.append((left_index + i) // 2 + 1)
+            left_index = i+1
+    return axes
+
+
+def symmetric_inner_code(code, ax):
+    code = (-1 * np.roll(code, -ax))[::-1]
+    return np.roll(code, ax).tolist()
+
+
+def draw(external_line_neg, shifted_inner_code, step):
+    code_external = [max(0, x) for x in external_line_neg]
+    code_inner = [max(0, x) for x in shifted_inner_code]
+    # code_inner = [max(0, x) for x in shifted_inner_code.tolist()]
+    inner_circle = gather_arches(code=code_inner, arches_type=inner_arches)
+    external_circle = gather_arches(code=code_external, arches_type=external_arches)
+    combining(inner_circle, external_circle, step, inn_counter, ex_counter, external_line_neg,
+              shifted_inner_code)
+
+
 if __name__ == '__main__':
     print(f'\
     bool_generate_again = {bool_generate_again} \n\
@@ -52,14 +79,25 @@ if __name__ == '__main__':
                 for step in range(rotation_steps):
                     shifted_inner_code = np.roll(inner_line_neg, step)
                     external_line_neg = np.roll(external_line_neg, 0)
-
                     if cyclic_check(external_line_neg, shifted_inner_code):
+                        ax = axes_of_symmetry(external_line_neg)[0]
+                        symmetric_check = (-1 * np.array(shifted_inner_code)[::-1]).tolist()
+                        external_check = (symmetric_inner_code(inner_line_neg, ax))
                         codes_counter += 1
-                        if bool_draw_circle:
-                            shifted_inner_code = np.roll(inner_line_neg, step)
-                            inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
-                            external_circle = gather_arches(code=external_line, arches_type=external_arches)
-                            combining(inner_circle, external_circle, step, inn_counter, ex_counter, external_line_neg, shifted_inner_code)
+
+                        if (ex_counter, shifted_inner_code.tolist()) not in result:
+                            if (ex_counter, symmetric_check) not in result:
+                                if (ex_counter, external_check) not in result:
+                                    result.append((ex_counter, external_check))
+
+                                    if bool_draw_circle:
+                                        draw(external_line_neg, shifted_inner_code, step)
+
+                        # if bool_draw_circle:
+                        #     shifted_inner_code = np.roll(inner_line_neg, step)
+                        #     inner_circle = gather_arches(code=inner_line, arches_type=inner_arches)
+                        #     external_circle = gather_arches(code=external_line, arches_type=external_arches)
+                        #     combining(inner_circle, external_circle, step, inn_counter, ex_counter, external_line_neg, shifted_inner_code)
 
                         with open(f"logs/log_deg_{deg}.txt", "a") as log_file:
                             log_file.write(f"E: {external_line_neg} \nI: {shifted_inner_code}\n\n")
